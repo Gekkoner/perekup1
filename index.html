@@ -27,6 +27,8 @@
 #stage[data-location=map] #exit{height:62px;background:none;padding-bottom:14px}
 #stage[data-location=map] #exit span{background:#30382bea;border-color:#e6e1ca44}
 @media(max-width:600px){#stage[data-location=map] .topbar{padding:10px 12px}#stage[data-location=map] #background{border-radius:8px}#stage[data-location=map] #exit{padding-bottom:12px}}
+
+#calendar-button::after{content:'';position:absolute;inset:0;pointer-events:none;transition:background 1s}#stage[data-location=room][data-period=night] #calendar-button::after{background:#07112c99}
 </style>
 </head>
 <body>
