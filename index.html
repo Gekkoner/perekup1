@@ -29,13 +29,20 @@
 @media(max-width:600px){#stage[data-location=map] .topbar{padding:10px 12px}#stage[data-location=map] #background{border-radius:8px}#stage[data-location=map] #exit{padding-bottom:12px}}
 
 #calendar-button::after{content:'';position:absolute;inset:0;pointer-events:none;transition:background 1s}#stage[data-location=room][data-period=night] #calendar-button::after{background:#07112c99}
+
+#bed{position:absolute;left:69%;top:50%;width:30%;height:38%;z-index:3;border:0;border-radius:25%;background:transparent;cursor:pointer}
+#bed:hover,#bed:focus-visible{background:#ffe7b50b;box-shadow:inset 0 0 35px #ffe7b51c}
+#sleep-overlay{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:#080b10;opacity:0;transition:opacity .6s;pointer-events:auto}
+#sleep-overlay.visible{opacity:1}
+#sleep-text{font-size:clamp(18px,2vw,30px);font-weight:400;letter-spacing:.06em;color:#e7e1d4}
+@media(prefers-reduced-motion:reduce){#sleep-overlay{transition:none}}
 </style>
 </head>
 <body>
 <main id="stage" aria-label="Игровая сцена">
  <img id="background" alt="">
- <header class="topbar"><div><h1 id="place" class="place"></h1><time id="clock"></time><p id="world-meta" class="meta"></p></div><div class="controls"><button id="pause" class="control">Ⅱ Пауза</button><button id="sleep" class="control">Спать до 12:00</button><button id="back" class="control" aria-label="Назад">← Назад</button><button id="fullscreen" class="control" aria-label="На весь экран">⛶</button></div></header>
- <div id="window-tint"></div><div id="lighting"></div><div id="weather-fx"></div><button id="calendar-button" aria-label="Открыть календарь"><div id="wall-calendar"></div></button><nav id="hotspots" aria-label="Переходы между локациями"></nav>
+ <header class="topbar"><div><h1 id="place" class="place"></h1><time id="clock"></time><p id="world-meta" class="meta"></p></div><div class="controls"><button id="fullscreen" class="control" aria-label="На весь экран">⛶</button></div></header>
+ <button id="bed" aria-label="Лечь спать" title="Лечь спать"></button><div id="sleep-overlay" role="status" aria-live="polite" hidden><span id="sleep-text"></span></div><div id="window-tint"></div><div id="lighting"></div><div id="weather-fx"></div><button id="calendar-button" aria-label="Открыть календарь"><div id="wall-calendar"></div></button><nav id="hotspots" aria-label="Переходы между локациями"></nav>
  <div id="map-arrows"><button class="map-arrow n" aria-label="Север">↑</button><button class="map-arrow s" aria-label="Юг">↓</button><button class="map-arrow w" aria-label="Запад">←</button><button class="map-arrow e" aria-label="Восток">→</button></div><p id="hint">Нажми внизу экрана, чтобы открыть карту</p>
  <button id="exit"><span><span class="arrow" aria-hidden="true">⌄</span><span id="exit-label">На карту</span></span></button>
 <section id="calendar-overlay" role="dialog" aria-modal="true" aria-label="Календарь" hidden><button id="calendar-close" aria-label="Закрыть календарь">×</button><button id="calendar-prev" class="calendar-nav" aria-label="Предыдущий месяц">‹</button><article id="calendar-paper"></article><button id="calendar-next" class="calendar-nav" aria-label="Следующий месяц">›</button><div id="calendar-status"></div><button id="calendar-today" class="control">Сегодня</button></section></main>
@@ -47,11 +54,11 @@ const months=['ЯНВАРЬ','ФЕВРАЛЬ','МАРТ','АПРЕЛЬ','МАЙ'
 const seasonNames={summer:'Лето',autumn:'Осень',winter:'Зима',spring:'Весна'};
 const periodNames={morning:'Утро',day:'День',night:'Ночь'};
 function seasonOf(d){const m=d.getUTCMonth();return m<2||m===11?'winter':m<5?'spring':m<8?'summer':'autumn'}
-function periodOf(d){const h=d.getUTCHours();return h>=4&&h<13?'morning':h>=13&&h<22?'day':'night'}
+function periodOf(d){const h=d.getUTCHours();return h>=10&&h<13?'morning':h>=13&&h<22?'day':'night'}
 function weatherOf(d){const season=seasonOf(d),slot=Math.floor(d.getTime()/14400000);const n=((Math.imul(slot,1664525)+1013904223)>>>0)%100;return n<(season==='autumn'?45:season==='spring'?38:30)?(season==='winter'?'snow':'rain'):'clear'}
 let state={time:START,location:'room',lastLocation:'room',paused:false};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Number.isFinite(s.time)&&s.time>=START&&ASSETS[s.location])state={...state,...s,paused:false}}catch{}
-const $=id=>document.getElementById(id);let navHistory=[],stamp='',calendarOpen=false,calendarMonth=null,last=performance.now(),fraction=0;
+const $=id=>document.getElementById(id);let sleeping=false;let navHistory=[],stamp='',calendarOpen=false,calendarMonth=null,last=performance.now(),fraction=0;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}}
 function date(){return new Date(state.time)}
 function wakeTime(d){const h=d.getUTCHours();if(h>=12&&h<22)return null;return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+(h>=22?1:0),12)}
@@ -61,7 +68,7 @@ function calendarArt(s){const x=SCENES.find(x=>x.location==='park'&&x.season===s
 function openCalendar(){calendarOpen=true;calendarMonth=null;$('calendar-overlay').hidden=false;renderCalendar();$('calendar-close').focus()}
 function closeCalendar(){calendarOpen=false;$('calendar-overlay').hidden=true;$('calendar-button').focus()}
 function renderCalendar(){const d=date();$('calendar-paper').innerHTML=calendarMarkup(d);$('calendar-status').textContent='Сегодня: '+d.toLocaleDateString('ru-RU',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'});$('wall-calendar').innerHTML=calendarMarkup(d,true)}
-function go(id){if(!ASSETS[id]||id===state.location)return;navHistory.push(state.location);if(id==='map')state.lastLocation=state.location;state.location=id;stamp='';save();render()}
+function go(id){if(sleeping)return;if(!ASSETS[id]||id===state.location)return;navHistory.push(state.location);if(id==='map')state.lastLocation=state.location;state.location=id;stamp='';save();render()}
 function addButton(label,id,x,y,kind){const b=document.createElement('button');b.className=kind;b.style.left=x+'%';b.style.top=y+'%';b.setAttribute('aria-label',label);if(kind==='map-point')b.innerHTML='<span class="tooltip">'+label+'</span>';else b.textContent=label;b.onclick=()=>go(id);$('hotspots').append(b)}
 const oldPoints=[{id:'yard',label:'Дом · двор',x:40.6,y:45.5},{id:'garages',label:'Гаражи',x:18.7,y:78.4},{id:'park',label:'Парк',x:50.1,y:64.3},{id:'mall',label:'ТЦ',x:71.8,y:54.3},{id:'pvz',label:'ПВЗ',x:36.3,y:83.4}];
 const points=[{id:'yard',label:'Дом · двор',x:22,y:57.5},{id:'pvz',label:'ПВЗ',x:16,y:69},{id:'garages',label:'Гаражи',x:14.5,y:82},{id:'park',label:'Парк',x:36.5,y:81.5},{id:'mall',label:'ТЦ',x:75,y:33.5}];
@@ -71,27 +78,25 @@ for(const dir of ['n','s','w','e'])document.querySelector('.map-arrow.'+dir).onc
 function render(){const d=date(),s=seasonOf(d),p=periodOf(d),w=weatherOf(d),id=state.location;
  $('clock').textContent=d.toLocaleDateString('ru-RU',{timeZone:'UTC',day:'numeric',month:'long'})+' · '+String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
  $('world-meta').textContent=seasonNames[s]+' · '+periodNames[p]+' · '+({clear:'Ясно',rain:'Дождь',snow:'Снег'}[w]);
- $('pause').textContent=state.paused?'▶ Продолжить':'Ⅱ Пауза';$('pause').setAttribute('aria-pressed',String(state.paused));
- $('sleep').disabled=wakeTime(d)===null;$('sleep').title=wakeTime(d)===null?'Можно лечь спать с 22:00 до 12:00':'Проснуться в 12:00';
  const key=[id,s,p,w,Math.floor(state.time/86400000)].join(':');if(stamp!==key){stamp=key;const stage=$('stage');stage.dataset.season=s;stage.dataset.period=p;stage.dataset.weather=w;stage.dataset.location=id;
  $('background').src=chooseScene(id,d);$('background').alt=ASSETS[id].name;$('place').textContent=ASSETS[id].name;$('hotspots').replaceChildren();
  if(id==='map'){points.forEach(x=>addButton(x.label,x.id,x.x,x.y,'map-point'));mapCamera()}
  if(id==='yard')addButton('В квартиру →','room',47.5,49,'action');if(id==='garages')addButton('Мой гараж →','garage',31,49,'action');if(id==='garage')addButton('В кооператив →','garages',13,68,'action');
- $('calendar-button').hidden=id!=='room';$('sleep').hidden=id!=='room';$('wall-calendar').innerHTML=calendarMarkup(d,true);$('exit-label').textContent=id==='map'?'Вернуться: '+ASSETS[state.lastLocation].name:'На карту';$('back').disabled=!navHistory.length;$('hint').hidden=id!=='room'||navHistory.length>0;
+ $('calendar-button').hidden=id!=='room';$('bed').hidden=id!=='room';$('wall-calendar').innerHTML=calendarMarkup(d,true);$('exit-label').textContent=id==='map'?'Вернуться: '+ASSETS[state.lastLocation].name:'На карту';$('hint').hidden=id!=='room'||navHistory.length>0;
  if(calendarOpen)renderCalendar();}
 }
-function advance(realMs){if(!state.paused){fraction+=realMs;const mins=Math.floor(fraction/1000);if(mins){fraction-=mins*1000;state.time+=mins*60000;render();save()}}}
+function advance(realMs){if(!state.paused&&!sleeping){fraction+=realMs;const mins=Math.floor(fraction/1000);if(mins){fraction-=mins*1000;state.time+=mins*60000;render();save()}}}
 setInterval(()=>{const now=performance.now();const dt=now-last;last=now;if(!document.hidden)advance(dt)},200);
 document.addEventListener('visibilitychange',()=>{last=performance.now();save()});window.addEventListener('pagehide',save);
-$('exit').onclick=()=>go(state.location==='map'?state.lastLocation:'map');$('back').onclick=()=>{if(navHistory.length){state.location=navHistory.pop();stamp='';save();render()}};
-$('pause').onclick=()=>{state.paused=!state.paused;last=performance.now();render();save()};$('calendar-button').onclick=openCalendar;$('calendar-close').onclick=closeCalendar;
+$('exit').onclick=()=>go(state.location==='map'?state.lastLocation:'map');
+$('calendar-button').onclick=openCalendar;$('calendar-close').onclick=closeCalendar;
 $('calendar-overlay').onclick=e=>{if(e.target===$('calendar-overlay'))closeCalendar()};
 $('calendar-prev').onclick=()=>{const d=calendarMonth||date();calendarMonth=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()-1,1));renderCalendar()};
 $('calendar-next').onclick=()=>{const d=calendarMonth||date();calendarMonth=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));renderCalendar()};
 $('calendar-today').onclick=()=>{calendarMonth=null;renderCalendar()};
-$('sleep').onclick=()=>{if(state.location!=='room')return;const next=wakeTime(date());if(next===null)return;state.time=next;fraction=0;last=performance.now();stamp='';render();save()};
+$('bed').onclick=async()=>{if(sleeping||state.location!=='room')return;const next=wakeTime(date());if(next===null){$('hint').textContent='Лечь спать можно с 22:00 до 12:00';$('hint').hidden=false;setTimeout(()=>{$('hint').hidden=true},2500);return}sleeping=true;const overlay=$('sleep-overlay');overlay.hidden=false;$('sleep-text').textContent='Засыпаешь…';await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));overlay.classList.add('visible');await new Promise(r=>setTimeout(r,650));state.time=next;fraction=0;stamp='';render();save();$('sleep-text').textContent='12:00 · Новый день';await new Promise(r=>setTimeout(r,900));overlay.classList.remove('visible');await new Promise(r=>setTimeout(r,650));overlay.hidden=true;last=performance.now();sleeping=false};
 $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('stage').requestFullscreen()}catch{}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(calendarOpen)closeCalendar();else go(state.location==='map'?state.lastLocation:'map')}if(calendarOpen&&e.key==='Tab'){const list=[...$('calendar-overlay').querySelectorAll('button')];if(e.shiftKey&&document.activeElement===list[0]){e.preventDefault();list.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===list.at(-1)){e.preventDefault();list[0].focus()}}});
+document.addEventListener('keydown',e=>{if(sleeping){e.preventDefault();return}if(e.key==='Escape'){if(calendarOpen)closeCalendar();else go(state.location==='map'?state.lastLocation:'map')}if(calendarOpen&&e.key==='Tab'){const list=[...$('calendar-overlay').querySelectorAll('button')];if(e.shiftKey&&document.activeElement===list[0]){e.preventDefault();list.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===list.at(-1)){e.preventDefault();list[0].focus()}}});
 for(let i=0;i<65;i++){const x=document.createElement('i');x.style.cssText=`left:${(i*37)%100}%;top:${-20+(i*13)%120}%;animation-delay:-${i%9}s;animation-duration:${2+i%5}s`;$('weather-fx').append(x)}
 window.gameDebug={setTime(t){state.time=typeof t==='string'?Date.parse(t):t;stamp='';render();save()},go,seasonOf,periodOf,weatherOf,advance,getState:()=>({...state}),openCalendar};render();
 
