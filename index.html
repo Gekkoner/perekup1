@@ -34,7 +34,7 @@
 <body>
 <main id="stage" aria-label="Игровая сцена">
  <img id="background" alt="">
- <header class="topbar"><div><h1 id="place" class="place"></h1><time id="clock"></time><p id="world-meta" class="meta"></p></div><div class="controls"><button id="pause" class="control">Ⅱ Пауза</button><button id="sleep" class="control">Спать до 08:00</button><button id="back" class="control" aria-label="Назад">← Назад</button><button id="fullscreen" class="control" aria-label="На весь экран">⛶</button></div></header>
+ <header class="topbar"><div><h1 id="place" class="place"></h1><time id="clock"></time><p id="world-meta" class="meta"></p></div><div class="controls"><button id="pause" class="control">Ⅱ Пауза</button><button id="sleep" class="control">Спать до 12:00</button><button id="back" class="control" aria-label="Назад">← Назад</button><button id="fullscreen" class="control" aria-label="На весь экран">⛶</button></div></header>
  <div id="window-tint"></div><div id="lighting"></div><div id="weather-fx"></div><button id="calendar-button" aria-label="Открыть календарь"><div id="wall-calendar"></div></button><nav id="hotspots" aria-label="Переходы между локациями"></nav>
  <div id="map-arrows"><button class="map-arrow n" aria-label="Север">↑</button><button class="map-arrow s" aria-label="Юг">↓</button><button class="map-arrow w" aria-label="Запад">←</button><button class="map-arrow e" aria-label="Восток">→</button></div><p id="hint">Нажми внизу экрана, чтобы открыть карту</p>
  <button id="exit"><span><span class="arrow" aria-hidden="true">⌄</span><span id="exit-label">На карту</span></span></button>
@@ -54,6 +54,7 @@ try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Number.isFinite(s.time)&
 const $=id=>document.getElementById(id);let navHistory=[],stamp='',calendarOpen=false,calendarMonth=null,last=performance.now(),fraction=0;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}}
 function date(){return new Date(state.time)}
+function wakeTime(d){const h=d.getUTCHours();if(h>=12&&h<22)return null;return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+(h>=22?1:0),12)}
 function chooseScene(id,d){let s=seasonOf(d),p=periodOf(d),w=weatherOf(d);let list=SCENES.filter(x=>x.location===id&&(id==='mall'||x.season===s));let choice=list.filter(x=>x.period===(p==='night'?'night':w==='rain'?'rain':p));if(!choice.length)choice=list.filter(x=>x.period==='day');if(!choice.length)return ASSETS[id].src;return choice[Math.floor(d.getTime()/86400000)%choice.length].src}
 function calendarMarkup(d,small=false){const shown=small?d:calendarMonth||d;const y=shown.getUTCFullYear(),m=shown.getUTCMonth(),first=(new Date(Date.UTC(y,m,1)).getUTCDay()+6)%7,count=new Date(Date.UTC(y,m+1,0)).getUTCDate();let cells=['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'].map((n,i)=>`<b class="weekday ${i>4?'weekend':''}">${n}</b>`).join('');for(let i=0;i<42;i++){const n=i-first+1,valid=n>0&&n<=count,today=valid&&n===d.getUTCDate()&&m===d.getUTCMonth()&&y===d.getUTCFullYear();cells+=`<span class="date-cell ${i%7>4?'weekend':''} ${today?'today':''}" ${today?'aria-current="date"':''}>${valid?n:''}</span>`}return `<img class="calendar-art" src="${calendarArt(seasonOf(shown))}" alt="${seasonNames[seasonOf(shown)]}"><div class="calendar-title">${months[m]} <small>${y}</small></div><div class="calendar-grid">${cells}</div>`}
 function calendarArt(s){const x=SCENES.find(x=>x.location==='park'&&x.season===s&&x.period==='day'&&x.empty);return x?x.src:ASSETS.park.src}
@@ -71,6 +72,7 @@ function render(){const d=date(),s=seasonOf(d),p=periodOf(d),w=weatherOf(d),id=s
  $('clock').textContent=d.toLocaleDateString('ru-RU',{timeZone:'UTC',day:'numeric',month:'long'})+' · '+String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
  $('world-meta').textContent=seasonNames[s]+' · '+periodNames[p]+' · '+({clear:'Ясно',rain:'Дождь',snow:'Снег'}[w]);
  $('pause').textContent=state.paused?'▶ Продолжить':'Ⅱ Пауза';$('pause').setAttribute('aria-pressed',String(state.paused));
+ $('sleep').disabled=wakeTime(d)===null;$('sleep').title=wakeTime(d)===null?'Можно лечь спать с 22:00 до 12:00':'Проснуться в 12:00';
  const key=[id,s,p,w,Math.floor(state.time/86400000)].join(':');if(stamp!==key){stamp=key;const stage=$('stage');stage.dataset.season=s;stage.dataset.period=p;stage.dataset.weather=w;stage.dataset.location=id;
  $('background').src=chooseScene(id,d);$('background').alt=ASSETS[id].name;$('place').textContent=ASSETS[id].name;$('hotspots').replaceChildren();
  if(id==='map'){points.forEach(x=>addButton(x.label,x.id,x.x,x.y,'map-point'));mapCamera()}
@@ -87,7 +89,7 @@ $('calendar-overlay').onclick=e=>{if(e.target===$('calendar-overlay'))closeCalen
 $('calendar-prev').onclick=()=>{const d=calendarMonth||date();calendarMonth=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()-1,1));renderCalendar()};
 $('calendar-next').onclick=()=>{const d=calendarMonth||date();calendarMonth=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));renderCalendar()};
 $('calendar-today').onclick=()=>{calendarMonth=null;renderCalendar()};
-$('sleep').onclick=()=>{const d=date();let next=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),8);if(next<=state.time)next+=86400000;state.time=next;fraction=0;last=performance.now();stamp='';render();save()};
+$('sleep').onclick=()=>{if(state.location!=='room')return;const next=wakeTime(date());if(next===null)return;state.time=next;fraction=0;last=performance.now();stamp='';render();save()};
 $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('stage').requestFullscreen()}catch{}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(calendarOpen)closeCalendar();else go(state.location==='map'?state.lastLocation:'map')}if(calendarOpen&&e.key==='Tab'){const list=[...$('calendar-overlay').querySelectorAll('button')];if(e.shiftKey&&document.activeElement===list[0]){e.preventDefault();list.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===list.at(-1)){e.preventDefault();list[0].focus()}}});
 for(let i=0;i<65;i++){const x=document.createElement('i');x.style.cssText=`left:${(i*37)%100}%;top:${-20+(i*13)%120}%;animation-delay:-${i%9}s;animation-duration:${2+i%5}s`;$('weather-fx').append(x)}
