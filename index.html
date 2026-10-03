@@ -30,8 +30,8 @@
 
 #calendar-button::after{content:'';position:absolute;inset:0;pointer-events:none;transition:background 1s}#stage[data-location=room][data-period=night] #calendar-button::after{background:#07112c99}
 
-#bed{position:absolute;left:69%;top:50%;width:30%;height:38%;z-index:3;border:0;border-radius:25%;background:transparent;cursor:pointer}
-#bed:hover,#bed:focus-visible{background:#ffe7b50b;box-shadow:inset 0 0 35px #ffe7b51c}
+#bed{position:absolute;inset:0;width:100%;height:100%;z-index:5;border:0;padding:0;border-radius:0;background:transparent;clip-path:polygon(67.82% 46.44%,68.18% 46.23%,69.2% 46.44%,69.2% 47.18%,83.43% 47.18%,83.43% 46.44%,84.81% 46.23%,85.05% 46.76%,85.05% 52.28%,86.6% 54.2%,91% 55.4%,96.4% 58.66%,96.4% 100%,84.8% 100%,84.8% 96%,69.2% 67.9%,69.2% 71.2%,67.82% 71.2%);cursor:pointer;transition:background .2s}
+#bed:hover,#bed:focus-visible{background:#ffe7b51c;box-shadow:none;outline:none}#bed:focus-visible{background:#ffe7b533}
 #sleep-overlay{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:#080b10;opacity:0;transition:opacity .6s;pointer-events:auto}
 #sleep-overlay.visible{opacity:1}
 #sleep-text{font-size:clamp(18px,2vw,30px);font-weight:400;letter-spacing:.06em;color:#e7e1d4}
