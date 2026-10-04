@@ -46,13 +46,28 @@
 #start-game:hover:not(:disabled){background:#374135;transform:translateY(-2px)}
 #start-game:disabled{opacity:.6;cursor:wait}
 @media(prefers-reduced-motion:reduce){#start-screen,#start-game{transition:none}}
+
+#onboarding{position:fixed;inset:0;z-index:110;background:#0b1017;display:grid;place-items:center}
+#name-form{width:min(440px,90vw);padding:32px;border:1px solid #d5bb8055;border-radius:14px;background:#20241f;color:#f4e5c4;box-shadow:0 20px 80px #0006}
+#name-form h2{margin:0 0 12px;font-weight:550}#name-form p{color:#c9c0ad;line-height:1.5}
+#player-name-input{width:100%;padding:13px;margin:14px 0;border:1px solid #c9ae7488;border-radius:7px;background:#111812;color:#fff4dc;font:inherit;font-size:18px}
+#name-form button,#intro-resume,#intro-skip{padding:11px 20px;border:1px solid #d5bb8066;border-radius:7px;background:#273126;color:#f4e5c4;cursor:pointer;font:inherit}
+#name-form button{width:100%}#name-error{font-size:13px;color:#edc7a0!important}
+#intro-player{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+#intro-resume{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%)}
+#intro-skip{position:absolute;z-index:2;right:20px;bottom:20px;background:#111a18bb;font-size:13px}
+#intro-status{position:absolute;z-index:2;bottom:75px;left:10%;width:80%;text-align:center;color:#eadfc9}
+#player-label{display:block;color:#e4c995;font-size:clamp(10px,1vw,16px);margin-bottom:5px}
 </style>
 </head>
 <body>
 <section id="start-screen" aria-label="FLIPLOT — начало игры"><div class="start-art"><img id="start-image" src="assets/fliplot-start.webp" alt="FLIPLOT — ночной двор"><div class="start-panel"><button id="start-game" disabled>Загрузка…</button></div></div></section>
-<main inert id="stage" aria-label="Игровая сцена">
+<section id="onboarding" aria-label="Начало истории" hidden>
+<form id="name-form"><h2>Как тебя зовут?</h2><p>С этого имени начинается твоя история.</p><label for="player-name-input">Имя героя</label><input id="player-name-input" name="playerName" maxlength="30" autocomplete="given-name" required placeholder="Введи имя"><p id="name-error" role="status" hidden></p><button type="submit">Начать историю</button></form>
+<video id="intro-player" playsinline muted preload="none" aria-label="Вступление: день рождения" hidden></video><button id="intro-resume" hidden>Смотреть</button><p id="intro-status" role="status" hidden></p><button id="intro-skip" hidden>Пропустить вступление</button>
+</section><main inert id="stage" aria-label="Игровая сцена">
  <img id="background" alt="">
- <header class="topbar"><div><h1 id="place" class="place"></h1><time id="clock"></time><p id="world-meta" class="meta"></p></div><div class="controls"><button id="fullscreen" class="control" aria-label="На весь экран">⛶</button></div></header>
+ <header class="topbar"><div><span id="player-label"></span><h1 id="place" class="place"></h1><time id="clock"></time><p id="world-meta" class="meta"></p></div><div class="controls"><button id="fullscreen" class="control" aria-label="На весь экран">⛶</button></div></header>
  <button id="bed" aria-label="Лечь спать"></button><div id="sleep-overlay" role="status" aria-live="polite" hidden><span id="sleep-text"></span></div><div id="window-tint"></div><div id="lighting"></div><div id="weather-fx"></div><button id="calendar-button" aria-label="Открыть календарь"><div id="wall-calendar"></div></button><nav id="hotspots" aria-label="Переходы между локациями"></nav>
  <div id="map-arrows"><button class="map-arrow n" aria-label="Север">↑</button><button class="map-arrow s" aria-label="Юг">↓</button><button class="map-arrow w" aria-label="Запад">←</button><button class="map-arrow e" aria-label="Восток">→</button></div><p id="hint">Нажми внизу экрана, чтобы открыть карту</p>
  <button id="exit"><span><span class="arrow" aria-hidden="true">⌄</span><span id="exit-label">На карту</span></span></button>
@@ -67,10 +82,12 @@ const periodNames={morning:'Утро',day:'День',night:'Ночь'};
 function seasonOf(d){const m=d.getUTCMonth();return m<2||m===11?'winter':m<5?'spring':m<8?'summer':'autumn'}
 function periodOf(d){const h=d.getUTCHours();return h>=10&&h<13?'morning':h>=13&&h<22?'day':'night'}
 function weatherOf(d){const season=seasonOf(d),slot=Math.floor(d.getTime()/14400000);const n=((Math.imul(slot,1664525)+1013904223)>>>0)%100;return n<(season==='autumn'?45:season==='spring'?38:30)?(season==='winter'?'snow':'rain'):'clear'}
-let state={time:START,location:'room',lastLocation:'room',paused:false};
+let state={time:START,location:'room',lastLocation:'room',paused:false,playerName:'',introComplete:false};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Number.isFinite(s.time)&&s.time>=START&&ASSETS[s.location])state={...state,...s,paused:false}}catch{}
 const $=id=>document.getElementById(id);let titleOpen=true;let sleeping=false;let navHistory=[],stamp='',calendarOpen=false,calendarMonth=null,last=performance.now(),fraction=0;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}}
+function playerName(){return typeof state.playerName==='string'?state.playerName.trim().slice(0,30):''}
+function storyText(text){return String(text).replaceAll('{name}',playerName())}
 function date(){return new Date(state.time)}
 function wakeTime(d){const h=d.getUTCHours();if(h>=12&&h<22)return null;return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+(h>=22?1:0),12)}
 function chooseScene(id,d){let s=seasonOf(d),p=periodOf(d),w=weatherOf(d);let list=SCENES.filter(x=>x.location===id&&(id==='mall'||x.season===s));let choice=list.filter(x=>x.period===(p==='night'?'night':w==='rain'?'rain':p));if(!choice.length)choice=list.filter(x=>x.period==='day');if(!choice.length)return ASSETS[id].src;return choice[Math.floor(d.getTime()/86400000)%choice.length].src}
@@ -87,6 +104,7 @@ let camera={x:0,y:1};
 function mapCamera(){const stage=$('stage');if(state.location!=='map')return;const sw=stage.clientWidth,sh=stage.clientHeight,pad=sw<600?10:20,top=88,bottom=72,ratio=1672/941,w=Math.min(sw-pad*2,Math.max(1,sh-top-bottom)*ratio),h=w/ratio;stage.style.setProperty('--map-w',w+'px');stage.style.setProperty('--map-h',h+'px');stage.style.setProperty('--map-x',(sw-w)/2+'px');stage.style.setProperty('--map-y',top+(sh-top-bottom-h)/2+'px')}
 for(const dir of ['n','s','w','e'])document.querySelector('.map-arrow.'+dir).onclick=()=>{if(dir==='n')camera.y=0;if(dir==='s')camera.y=1;if(dir==='w')camera.x=0;if(dir==='e')camera.x=1;mapCamera()};window.addEventListener('resize',mapCamera);
 function render(){const d=date(),s=seasonOf(d),p=periodOf(d),w=weatherOf(d),id=state.location;
+ $('player-label').textContent=playerName();
  $('clock').textContent=d.toLocaleDateString('ru-RU',{timeZone:'UTC',day:'numeric',month:'long'})+' · '+String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
  $('world-meta').textContent=seasonNames[s]+' · '+periodNames[p]+' · '+({clear:'Ясно',rain:'Дождь',snow:'Снег'}[w]);
  const key=[id,s,p,w,Math.floor(state.time/86400000)].join(':');if(stamp!==key){stamp=key;const stage=$('stage');stage.dataset.season=s;stage.dataset.period=p;stage.dataset.weather=w;stage.dataset.location=id;
@@ -115,5 +133,38 @@ window.gameDebug={setTime(t){state.time=typeof t==='string'?Date.parse(t):t;stam
 const startButton=$('start-game');let hasSave=false;try{hasSave=!!localStorage.getItem(KEY)}catch{}
 const waitImage=img=>new Promise(resolve=>{if(img.complete)return resolve();img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});setTimeout(resolve,8000)});
 Promise.all([waitImage($('start-image')),waitImage($('background'))]).then(()=>{startButton.disabled=false;startButton.textContent=hasSave?'Продолжить':'Начать игру';startButton.focus()});
-startButton.onclick=()=>{if(startButton.disabled||!titleOpen)return;startButton.disabled=true;$('start-screen').classList.add('leaving');setTimeout(()=>{$('start-screen').hidden=true;$('stage').inert=false;titleOpen=false;last=performance.now();$('fullscreen').focus()},500)};
+const introClips=['assets/intro-calendar.mp4','assets/intro-gift.mp4'];
+const introVideo=$('intro-player');let introIndex=0,introRunning=false;
+function enterGame(fromIntro=false){
+ introRunning=false;introVideo.pause();introVideo.removeAttribute('src');introVideo.load();
+ if(fromIntro){state.introComplete=true;state.location='room';state.lastLocation='room';navHistory=[];stamp=''}
+ $('onboarding').hidden=true;$('start-screen').hidden=true;$('stage').inert=false;titleOpen=false;last=performance.now();fraction=0;render();save();$('fullscreen').focus();
+}
+function playIntro(){
+ if(!introRunning)return;
+ $('intro-resume').hidden=true;$('intro-status').hidden=true;
+ introVideo.play().catch(()=>{if(introRunning){$('intro-resume').textContent='Смотреть';$('intro-resume').hidden=false;$('intro-resume').focus()}});
+}
+function loadIntroClip(){introVideo.src=introClips[introIndex];introVideo.load();playIntro()}
+function beginIntro(){
+ $('name-form').hidden=true;introVideo.hidden=false;$('intro-skip').hidden=false;introRunning=true;introIndex=0;loadIntroClip();
+}
+introVideo.addEventListener('ended',()=>{if(!introRunning)return;if(++introIndex<introClips.length)loadIntroClip();else enterGame(true)});
+introVideo.addEventListener('error',()=>{if(!introRunning)return;$('intro-status').textContent='Видео не загрузилось. Попробуй ещё раз или пропусти вступление.';$('intro-status').hidden=false;$('intro-resume').textContent='Повторить';$('intro-resume').hidden=false});
+$('intro-resume').onclick=()=>{if(introVideo.error)loadIntroClip();else playIntro()};
+$('intro-skip').onclick=()=>enterGame(true);
+$('name-form').onsubmit=e=>{
+ e.preventDefault();const name=$('player-name-input').value.replace(/[\u0000-\u001f\u007f]/g,'').trim().replace(/\s+/g,' ').slice(0,30);
+ if(!name){$('name-error').textContent='Введи имя героя.';$('name-error').hidden=false;$('player-name-input').focus();return}
+ state.playerName=name;save();beginIntro();
+};
+startButton.onclick=()=>{
+ if(startButton.disabled||!titleOpen)return;startButton.disabled=true;$('start-screen').hidden=true;
+ if(playerName()&&state.introComplete){enterGame();return}
+ $('onboarding').hidden=false;
+ if(playerName()){beginIntro();return}
+ $('player-name-input').focus();
+};
+// All future dialogue can use gameStory.text('Привет, {name}!'). Render as textContent.
+window.gameStory={get playerName(){return playerName()},text:storyText};
 </script></body></html>
