@@ -67,6 +67,34 @@
 .phone-screen{height:100%;border-radius:clamp(12px,2vw,24px);overflow:hidden;background:radial-gradient(ellipse at 90% 0,#668981,transparent 65%),linear-gradient(150deg,#163c3b,#173033 60%,#8b875d);position:relative;display:flex;flex-direction:column;padding:0 7% 6%;color:#f2f4e9}
 #phone-toggle{position:relative;flex-shrink:0;width:100%;height:13%;min-height:24px;padding:7px 0 0;display:flex;align-items:center;justify-content:space-between;gap:12%;border:0;background:transparent;cursor:pointer;font-size:clamp(7px,1.1vw,13px)}.phone-camera{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:5px;height:5px;background:#091213;border:1px solid #617571;border-radius:50%}.phone-signal{font-size:.75em;letter-spacing:1px}.phone-home{padding-top:8%;flex:1;display:flex;flex-direction:column}.phone-date{font-size:clamp(6px,.95vw,12px);opacity:.7}.phone-owner{font-size:clamp(13px,2vw,26px);font-weight:350;margin:6px 0 12%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phone-apps{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(5px,1vw,13px)}.phone-app{border:0;background:transparent;padding:0;cursor:pointer;font-size:clamp(6px,.85vw,11px);display:flex;flex-direction:column;align-items:center;gap:5px}.app-icon{width:70%;aspect-ratio:1;border-radius:25%;display:grid;place-items:center;background:#acc39b;box-shadow:0 3px 8px #0002;color:#1d3533}.app-icon svg{width:48%;height:48%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.phone-app:nth-child(2) .app-icon{background:#e0c891}.phone-app:nth-child(3) .app-icon{background:#9fb8c0}.phone-app:nth-child(4) .app-icon{background:#d5b9a4}#phone-notice{font-size:clamp(7px,.85vw,11px);line-height:1.5;padding:9px;border-radius:8px;background:#101e2480;min-height:3em;margin-top:10%;color:#e7e7d6}.phone-bottom{margin-top:auto;background:#0d20214d;border-radius:12px;display:flex;justify-content:center;padding:7%;font-size:clamp(6px,.8vw,11px);color:#d6e2d6}.phone-close{border:0;background:transparent;color:inherit;cursor:pointer;width:100%;padding:6px}.phone-close:after{content:'';display:block;width:35%;height:3px;border-radius:3px;background:#e5e7dbb3;margin:auto}#phone-dock:not(.open) .phone-home,#phone-dock:not(.open) .phone-close{visibility:hidden}#phone-dock:not(.open) .phone-screen{cursor:pointer}#stage[data-location=map] #phone-dock{display:none}
 @media(prefers-reduced-motion:reduce){#phone-dock{transition:none}.gift-device{animation:none}}
+
+/* Gift reveal uses the viewport, rather than the short landscape scene. */
+#gift-reveal{position:fixed;padding:16px;overflow-y:auto}
+.gift-card{width:min(900px,100%);height:auto;max-height:calc(100dvh - 32px);padding:clamp(18px,3vw,36px);grid-template-columns:minmax(0,45fr) minmax(0,55fr);gap:20px;overflow-y:auto}
+.gift-art{height:clamp(150px,50dvh,360px);min-height:0}
+.gift-device{height:85%;flex-shrink:0}
+.gift-copy{min-width:0;padding-right:0}
+.gift-copy h2{font-size:clamp(22px,3vw,38px)}
+.gift-copy p{font-size:clamp(13px,1.15vw,16px)}
+.gift-copy small{font-size:10px}
+.gift-copy .control{min-height:44px;font-size:14px;margin-top:6px}
+@media(max-width:600px) and (orientation:portrait){
+ .gift-card{grid-template-columns:minmax(0,1fr);gap:12px;max-width:440px;padding:22px}
+ .gift-art{height:clamp(150px,28dvh,250px)}
+ .gift-device span{font-size:28px}
+ .gift-device b{font-size:10px}
+ .gift-copy h2{margin:8px 0;font-size:25px}
+ .gift-copy p{margin:8px 0;font-size:14px;line-height:1.45}
+ .gift-copy .control{width:100%}
+}
+@media(max-height:480px) and (orientation:landscape){
+ #gift-reveal{padding:10px}
+ .gift-card{max-height:calc(100dvh - 20px);padding:16px;gap:16px}
+ .gift-art{height:65dvh}
+ .gift-copy h2{font-size:22px;margin:6px 0}
+ .gift-copy p{font-size:12px;line-height:1.4;margin:6px 0}
+ .gift-copy .control{padding:9px 16px;margin-top:4px}
+}
 </style>
 </head>
 <body>
