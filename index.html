@@ -130,7 +130,7 @@
 @media(prefers-reduced-motion:reduce){#phone-dock.market-mode,#phone-dock.market-closing{animation:none}.listing-card{transition:none}}
 
 </style>
-<link rel="stylesheet" href="commerce.css?v=20261005-bank">
+<link rel="stylesheet" href="commerce.css?v=20261006-bank2">
 </head>
 <body>
 <section id="start-screen" aria-label="FLIPLOT — начало игры"><div class="start-art"><img id="start-image" src="assets/fliplot-start.webp" alt="FLIPLOT — ночной двор"><div class="start-panel"><button id="start-game" disabled>Загрузка…</button></div></div></section>
@@ -294,5 +294,5 @@ $('market-app').onclick=e=>{const item=e.target.closest('[data-item]');if(item){
 document.addEventListener('keydown',e=>{if(!marketOpen)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(marketView.type==='list')closeMarket();else marketBack()}if(e.key==='Tab'){const list=[...$('market-app').querySelectorAll('button,input,select')].filter(x=>x.getClientRects().length&&!x.disabled);if(!list.length)return;const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}},true);
 for(const b of document.querySelectorAll('.phone-app'))b.onclick=()=>{if(b.dataset.app==='A8ito')openMarket();else if(b.dataset.app==='Контакты')openMarket({type:'directory'});else $('phone-notice').textContent=b.dataset.app+' — скоро появится.'};
 
-</script><script src="commerce.js?v=20261005-bank"></script>
+</script><script src="commerce.js?v=20261006-bank2"></script>
 </body></html>
