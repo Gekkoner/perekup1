@@ -1,55 +1,60 @@
-/* World actors and first-person inspection, October 2026. */
+/* Shared scene composition: world, conversation and first-person inspection. */
 #meeting-npcs{position:absolute;inset:0;display:block;height:auto;pointer-events:none}
-.meeting-person{position:absolute;left:var(--actor-x);bottom:var(--actor-bottom);height:var(--actor-height);width:auto;aspect-ratio:.6;transform:translateX(-50%);animation:none;background:none;border:0;border-radius:0;filter:none;box-shadow:none;overflow:visible;pointer-events:auto}
-.world-sprite{display:block;width:100%;height:100%;background-image:url('assets/sellers-standing.webp');background-size:500% 300%;background-repeat:no-repeat;filter:drop-shadow(1px 3px 2px #0003)}
-.meeting-person:before{content:"";position:absolute;left:19%;right:19%;bottom:1%;height:3%;border-radius:50%;background:#151b1a66;filter:blur(3px)}
-.meeting-person:after{content:attr(data-name);bottom:96%;font-size:clamp(11px,1vw,16px);white-space:nowrap;background:#242922d9}
-.meeting-person:hover .world-sprite{filter:drop-shadow(0 0 2px #eee1c199)}
-#stage[data-period=night] .world-sprite{filter:brightness(.56) saturate(.72)}
-#stage[data-weather=rain] .world-sprite{filter:brightness(.85) saturate(.85)}
-#trade-scene{position:absolute;inset:0;padding:0;overflow:hidden;display:block;background:linear-gradient(0deg,#12171138,transparent 55%);isolation:isolate}
+.meeting-person{position:absolute;left:var(--actor-x);bottom:var(--actor-bottom);height:var(--actor-height);width:auto;aspect-ratio:.6;transform:translateX(-50%);animation:none;background:none;border:0;border-radius:0;filter:none;box-shadow:none;overflow:visible;pointer-events:auto;cursor:pointer}
+.world-sprite{display:block;width:100%;height:100%;background-image:url('assets/sellers-painted.png');background-size:500% 300%;background-repeat:no-repeat;filter:saturate(.82) brightness(.94) drop-shadow(1px 2px 1px #30291938)}
+.meeting-person:before{content:"";position:absolute;left:15%;right:12%;bottom:1%;height:4%;border-radius:50%;background:#28291e80;filter:blur(3px);transform:skewX(-32deg);transform-origin:center}
+.meeting-person:after{content:attr(data-name);bottom:98%;font-size:clamp(11px,1vw,15px);white-space:nowrap;background:#30352bea;border:1px solid #d1c5aa55;border-radius:4px}
+.meeting-person:hover .world-sprite{filter:saturate(.85) brightness(1.04) drop-shadow(0 0 2px #eee1c177)}
+#stage[data-period=night] .world-sprite{filter:brightness(.48) saturate(.65)}
+#stage[data-weather=rain] .world-sprite{filter:brightness(.8) saturate(.7)}
+#trade-scene{--paper:#eee6d5;--ink:#30372e;--line:#d6c8a855;position:absolute;inset:0;padding:0;overflow:hidden;display:block;background:linear-gradient(0deg,#181e19a3,transparent 65%);isolation:isolate}
 .meeting-backdrop{display:none}
-.trade-active #hotspots,.trade-active #exit,.trade-active .topbar{visibility:hidden}
-.meeting-actor{position:absolute;left:-4%;bottom:-37%;height:135%;aspect-ratio:.6;pointer-events:none;transition:height .3s,bottom .3s,left .3s;z-index:1}
-.meeting-actor .world-sprite{filter:drop-shadow(4px 9px 9px #0003)}
-#trade-scene.inspect-mode .meeting-actor{height:69%;bottom:20%;left:-3%;opacity:.93}
-.meeting-dialog{position:absolute;bottom:2.2%;left:1.8%;right:1.8%;min-height:18%;max-height:32%;overflow:auto;z-index:5;background:#222521e8;border:1px solid #cbbfa67a;border-radius:12px;padding:clamp(9px,1.4vw,23px);box-shadow:0 5px 30px #0002;backdrop-filter:blur(5px)}
-.meeting-dialog header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;color:#c4c7a5}
-.meeting-dialog header strong{font-size:clamp(14px,1.9vw,28px);font-weight:600}
-.meeting-dialog header small{font-size:clamp(10px,1vw,15px);color:#d7d3c4}
-.meeting-dialog p{font-size:clamp(13px,1.65vw,25px);line-height:1.4;margin:8px 0 0;color:#faf3e8}
-.meeting-choices{position:absolute;right:2.5%;bottom:24%;width:34%;max-height:69%;overflow:auto;display:flex;flex-direction:column;gap:9px;z-index:6;scrollbar-width:thin}
-.meeting-choices button{min-height:42px;text-align:center;font-size:clamp(12px,1.3vw,20px);padding:11px 14px;color:#f7f1e7;border:1px solid #cbbfa67a;border-radius:10px;background:#242621df;backdrop-filter:blur(5px);transition:background .16s,transform .16s}
-.meeting-choices button:hover,.meeting-choices button[aria-pressed=true]{background:#5a5c44e8;border-color:#ded2ae}
-.meeting-choices button:active{transform:translateY(1px)}
+.trade-active #hotspots,.trade-active #exit,.trade-active .topbar,.trade-active #phone-dock,.trade-active #meeting-npcs{visibility:hidden}
+.meeting-actor{position:absolute;left:-1%;top:5%;height:153%;aspect-ratio:.6;pointer-events:none;z-index:1;transform-origin:bottom left;animation:actor-enter .25s ease-out}
+.meeting-actor .world-sprite{filter:saturate(.82) brightness(.96) drop-shadow(5px 5px 7px #17201833)}
+/* Keep the seller waist-up, including while inspecting. */
+#trade-scene.inspect-mode .meeting-actor{height:141%;top:9%;left:-7%;opacity:.9}
+.meeting-dialog{position:absolute;bottom:2.5%;left:3%;right:3%;height:18%;min-height:0;max-height:none;overflow:auto;z-index:5;background:linear-gradient(110deg,#272f27f5,#30372ef0);border:1px solid var(--line);border-radius:5px;padding:clamp(10px,1.3vw,20px) clamp(14px,1.8vw,28px);box-shadow:0 8px 25px #10171030;backdrop-filter:blur(12px)}
+.meeting-dialog:before{content:"";position:absolute;top:0;left:0;bottom:0;width:3px;background:#bcaa7d}
+.meeting-dialog header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;color:#d4c194}
+.meeting-dialog header strong{font-size:clamp(14px,1.45vw,22px);font-weight:600;letter-spacing:.02em}
+.meeting-dialog header small{font-size:clamp(10px,.9vw,14px);color:#b7bdad}
+.meeting-dialog p{font-size:clamp(13px,1.35vw,20px);line-height:1.45;margin:6px 0 0;color:var(--paper);max-width:95%}
+.meeting-choices{position:absolute;right:3%;bottom:24%;width:30%;max-height:67%;overflow:auto;display:flex;flex-direction:column;gap:7px;z-index:6;scrollbar-width:thin}
+.meeting-choices button{min-height:36px;text-align:left;font-size:clamp(12px,1.08vw,17px);padding:10px 16px;color:#eee6d5;border:1px solid var(--line);border-radius:4px;background:#30372ee8;backdrop-filter:blur(12px);box-shadow:0 2px 8px #111a1118;transition:background .16s,border-color .16s;cursor:pointer;display:flex;align-items:center;gap:10px}
+.meeting-choices button:before{content:"";width:5px;height:5px;border-top:1px solid #c3b48e;border-right:1px solid #c3b48e;transform:rotate(45deg);flex-shrink:0;opacity:.65}
+.meeting-choices button:hover,.meeting-choices button[aria-pressed=true]{background:#525b43ef;border-color:#c7b88c}
+.meeting-choices button:focus-visible{outline:2px solid #d4c194;outline-offset:-3px}
 .meeting-choices button:disabled{opacity:.5;cursor:not-allowed}
-.meeting-choices [data-trade=pay]{background:#555d42e8}
-.meeting-choices [data-trade=defect-bargain]{border-color:#d6937d;color:#ffe4d9}
-.meeting-progress{font-size:clamp(10px,1vw,14px);color:#ece5d2;padding:4px 8px;text-shadow:0 1px 3px #000}
-.held-inspection{position:absolute;z-index:3;left:22%;bottom:19%;width:48%;aspect-ratio:1;max-height:79%;animation:inspection-lift .28s ease-out;pointer-events:none}
-.held-sprite{position:absolute;inset:0;background-size:500% 500%;background-repeat:no-repeat;filter:drop-shadow(0 4px 4px #0003)}
-.held-sprite.load-failed{display:grid;place-items:center;background:none!important;text-align:center;padding:30px;font-size:14px;color:#fff}
-.inspection-point{position:absolute;width:12%;height:9%;border:1.5px solid #b54d42;transform:translate(-50%,-50%);border-radius:2px;z-index:3}
-.inspection-line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:3;fill:none;stroke:#b54d42;stroke-width:1.5px;pointer-events:none}
+.meeting-choices [data-trade=pay]{background:#586346ee;border-color:#bfbd7c77}
+.meeting-choices [data-trade=decline],.meeting-choices [data-trade=inspect-back]{background:#293128c9;color:#d2d3c7}
+.meeting-choices [data-trade=defect-bargain]{border-color:#b58169;color:#f0d0b9}
+.meeting-progress{font-size:clamp(10px,.85vw,13px);color:#eee6d5;padding:3px 1px;text-shadow:0 1px 4px #172015}
+.held-inspection{position:absolute;z-index:3;left:31%;bottom:17%;width:35%;aspect-ratio:1;animation:inspection-lift .25s ease-out;pointer-events:none}
+.held-sprite{position:absolute;inset:0;background-size:500% 500%;background-repeat:no-repeat;filter:saturate(.82) brightness(.96) drop-shadow(0 5px 6px #1c241833);mask-image:linear-gradient(#000 0 88%,transparent 100%)}
+.held-sprite.load-failed{display:grid;place-items:center;background:none!important;text-align:center;padding:24px;font-size:14px;color:#fff}
+.inspection-point{position:absolute;width:12%;height:9%;border:1.5px solid #b46653;transform:translate(-50%,-50%);border-radius:3px;z-index:3;background:#c6715012}
+.inspection-line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:3;fill:none;stroke:#b46653;stroke-width:1.2px;pointer-events:none}
 .inspection-line path{vector-effect:non-scaling-stroke}
-.inspection-callout{position:absolute;left:76%;top:6%;z-index:4;white-space:nowrap;max-width:54%;padding:7px 11px;background:#f0eadeef;border:1px solid #b76a59;border-radius:7px;color:#984336;font-size:clamp(11px,1.15vw,18px);font-weight:500;box-shadow:0 3px 14px #2a20151f}
-.inspection-item-name{position:absolute;left:3%;bottom:2%;max-width:88%;font-size:clamp(10px,1vw,15px);padding:5px 8px;background:#252720cb;border-radius:5px;color:#f5efdf}
-#trade-scene.inspect-mode .meeting-choices{width:26%;right:2%;gap:6px}
-#trade-scene.inspect-mode .meeting-choices button{font-size:clamp(11px,1.05vw,17px);padding:10px 9px}
-.purchase-done{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;margin:0;max-height:95%;overflow:auto}
-@keyframes inspection-lift{from{opacity:0;transform:translateY(25px) rotate(-3deg)}to{opacity:1;transform:none}}
-@media(max-height:500px){.meeting-choices{gap:5px}.meeting-choices button{min-height:31px;padding:6px 9px;font-size:12px}.meeting-dialog{padding:8px 12px;border-radius:8px}.meeting-dialog p{font-size:13px;margin:4px 0 0}.meeting-dialog header strong{font-size:15px}.meeting-dialog header small{font-size:10px}.meeting-progress{font-size:10px}.inspection-callout{padding:4px 7px;font-size:11px}}
+.inspection-callout{position:absolute;left:62%;top:6%;z-index:4;white-space:nowrap;padding:6px 10px;background:#eee7d8f2;border:1px solid #ba8b75;border-radius:4px;color:#934e3c;font-size:clamp(11px,1vw,15px);font-weight:500;box-shadow:0 3px 12px #30261920}
+.inspection-item-name{position:absolute;left:0;top:-7%;width:100%;text-align:center;font-size:clamp(10px,1vw,15px);letter-spacing:.02em;color:#f3ebd9;text-shadow:0 2px 6px #152015,0 0 15px #152015}
+#trade-scene.inspect-mode .meeting-choices{width:27%;right:3%;gap:7px}
+#trade-scene.inspect-mode .meeting-choices button{font-size:clamp(11px,1vw,16px)}
+.purchase-done{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;margin:0;max-height:92%;overflow:auto;background:#30372ef5;border:1px solid var(--line);border-radius:8px}
+@keyframes inspection-lift{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes actor-enter{from{opacity:.5;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@media(max-height:500px) and (orientation:landscape){.meeting-choices{gap:5px}.meeting-choices button{min-height:29px;padding:6px 10px;font-size:12px}.meeting-dialog{padding:7px 12px;height:19%}.meeting-dialog p{font-size:12px;margin:3px 0 0;line-height:1.3}.meeting-dialog header strong{font-size:14px}.meeting-dialog header small{font-size:10px}.meeting-progress{font-size:10px}.inspection-callout{padding:4px 7px;font-size:11px}#trade-scene.inspect-mode .meeting-choices{gap:5px}#trade-scene.inspect-mode .meeting-choices button{font-size:11px}.held-inspection{width:34%;left:32%;bottom:18%}}
 @media(orientation:portrait){
- #trade-scene{position:fixed;inset:0;background:linear-gradient(#15201818,#15201850)}
- .meeting-backdrop{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
- .meeting-actor{left:-20%;height:102%;bottom:-20%}
- .meeting-dialog{bottom:max(12px,env(safe-area-inset-bottom));left:3%;right:3%;min-height:17%;max-height:27%;padding:14px}
- .meeting-dialog p{font-size:15px}.meeting-dialog header strong{font-size:19px}.meeting-dialog header small{font-size:11px}
- .meeting-choices{right:3%;bottom:25%;width:48%;max-height:55%;gap:7px}.meeting-choices button{font-size:13px;padding:10px 8px;min-height:42px}
- #trade-scene.inspect-mode .meeting-actor{height:59%;left:-16%;bottom:43%;opacity:.72}
- .held-inspection{left:5%;bottom:38%;width:82%;max-height:none}
- #trade-scene.inspect-mode .meeting-choices{left:4%;right:4%;bottom:23%;width:auto;max-height:19%;display:grid;grid-template-columns:1fr 1fr;gap:5px}
- #trade-scene.inspect-mode .meeting-choices button{font-size:12px;padding:8px;min-height:38px}.meeting-progress{grid-column:1/-1}
- .inspection-callout{left:64%;font-size:12px;max-width:none}.inspection-item-name{font-size:11px;bottom:0}
+ #trade-scene{position:fixed;inset:0;background:linear-gradient(0deg,#172118b3,transparent 85%)}
+ .meeting-backdrop{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;filter:brightness(.85)}
+ .meeting-actor{left:-30%;height:104%;top:8%;opacity:.95}
+ .meeting-dialog{bottom:max(14px,env(safe-area-inset-bottom));left:4%;right:4%;height:18%;padding:14px}
+ .meeting-dialog p{font-size:14px}.meeting-dialog header strong{font-size:18px}.meeting-dialog header small{font-size:10px}
+ .meeting-choices{right:4%;bottom:23%;width:54%;max-height:57%;gap:7px}.meeting-choices button{font-size:13px;padding:10px;min-height:42px}
+ #trade-scene.inspect-mode .meeting-actor{height:100%;left:-43%;top:7%;opacity:.75}
+ .held-inspection{left:19%;bottom:40%;width:72%}
+ #trade-scene.inspect-mode .meeting-choices{left:4%;right:4%;bottom:22%;width:auto;max-height:19%;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ #trade-scene.inspect-mode .meeting-choices button{font-size:12px;padding:9px;min-height:40px}.meeting-progress{grid-column:1/-1}
+ .inspection-item-name{font-size:12px;top:-4%}.inspection-callout{font-size:12px}
 }
-@media(prefers-reduced-motion:reduce){.held-inspection{animation:none}.meeting-actor,.meeting-choices button{transition:none}}
+@media(prefers-reduced-motion:reduce){.held-inspection,.meeting-actor{animation:none}.meeting-choices button{transition:none}}

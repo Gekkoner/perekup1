@@ -20,7 +20,7 @@ window.FlipInspection=(()=>{
       <div class="held-sprite" role="img" aria-label="${esc(i.title)} в руках: ${esc(p.checks[view])}" data-atlas="${src}" style="background-image:url('${src}');background-position:${k%5*25}% ${Math.floor(k/5)*25}%"></div>
       ${check&&problem?`<span class="inspection-point bad" style="left:${point[0]}%;top:${point[1]}%" aria-hidden="true"></span>
       <div class="inspection-callout bad" role="status">${esc(problem)}</div>
-      <svg class="inspection-line bad" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M ${point[0]} ${point[1]} L 77 15 L 86 15"/></svg>`:''}
+      <svg class="inspection-line bad" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M ${point[0]} ${point[1]} L 65 15 L 72 15"/></svg>`:''}
       <div class="inspection-item-name">${esc(i.title)}</div>
     </div>`;
   }

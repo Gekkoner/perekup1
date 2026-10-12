@@ -45,7 +45,7 @@ if(action==='buy'||action==='reschedule'){message(ch,'you',`Хочу купит�
 $('market-app').addEventListener('click',e=>{const b=e.target.closest('[data-trade]');if(b)trade(b.dataset.trade);const ch=e.target.closest('[data-chat]');if(ch)showMarketView({type:'chat',id:ch.dataset.chat})});
 for(const [type,label] of [['favorites','♡'],['inbox','Чаты'],['inventory','Покупки']]){const b=document.createElement('button');b.className='market-icon';b.textContent=label;b.setAttribute('aria-label',type==='favorites'?'Избранное':label);b.onclick=()=>showMarketView({type});$('market-close').before(b)}
 function available(id){const a=c.chats[id]?.appointment;return !purchased(id)&&a?.status==='confirmed'&&a.location===state.location&&state.time>=a.time-H&&state.time<=a.time+H}
-const placements={yard:[63,15,47],park:[62,17,44],garages:[56,13,48],mall:[61,16,45],pvz:[69,13,47]};
+const placements={yard:[63,16,43],park:[62,19,40],garages:[56,14,44],mall:[61,17,42],pvz:[69,14,43]};
 function actor(s){const n=CATALOG.sellers.indexOf(s),row=Math.floor(n/5),starts=[0,433,848],heights=[433,415,406],y=starts[row]/(1254-heights[row])*100;return `<span class="world-sprite" role="img" aria-label="${html(s.appearance)}" style="background-size:500% ${1254/heights[row]*100}%;background-position:${n%5*25}% ${y}%"></span>`}
 function renderNPCs(){
  const ids=Object.keys(c.chats).filter(available),key=state.location+ids.join();if(key===npcStamp)return;npcStamp=key;
